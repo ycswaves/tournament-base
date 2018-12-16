@@ -1,0 +1,25 @@
+{
+  "defaultSeverity": "error",
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "jsRules": {
+    "trailing-comma": false
+  },
+  "rules": {
+    "quotemark": [true, "single"],
+    "interface-name": [true, "never-prefix"],
+    "no-console": false,
+    "no-shadowed-variable": false,
+    "object-literal-sort-keys": false
+    // "arrow-parens": false,
+    // "trailing-comma": false,
+    // "member-access": [true, "no-public"],
+    // "callable-types": false,
+    // "no-empty-interface": false,
+    // "only-arrow-functions": false,
+    // "variable-name": [true, "allow-leading-underscore"]
+  },
+  "rulesDirectory": [],
+  "linterOptions": {
+    "exclude": ["./**/node_modules/**"]
+  }
+}

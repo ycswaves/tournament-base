@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "esnext",
+    "strict": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "moduleResolution": "node",
+    "baseUrl": "./src",
+    "types": ["jest"]
+  },
+  "esModuleInterop": true
+}
