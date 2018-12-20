@@ -28,7 +28,8 @@ node_modules
 .rpt*
 
 # ignore log
-client/npm*.log.*
+# client/npm*.log.*
+client/
 npm-debug.log
 supervisord.*
 
