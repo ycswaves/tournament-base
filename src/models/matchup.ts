@@ -1,8 +1,7 @@
 import { TeamTable } from './tournament';
 
-export type CompeteHandler = () => Promise<void>;
+export type CompeteHandler = () => void;
 export class MatchUp {
-  // private winnerId!: number;
   private teamIds: number[] = [];
   private matchScore!: number;
   private notifyTournament!: CompeteHandler;
@@ -68,10 +67,6 @@ export class MatchUp {
   }
 
   public getWinnerId(winnerScore: number): number {
-    // if (this.winnerId !== undefined) {
-    //   return this.winnerId;
-    // }
-
     const winnerId = this.teamIds
       .sort((teamId1, teamId2) => teamId1 - teamId2)
       .find((teamId: number) => {
@@ -83,7 +78,6 @@ export class MatchUp {
       throw new Error('no matching winner score');
     }
 
-    // this.winnerId = winnerId;
     return winnerId;
   }
 
