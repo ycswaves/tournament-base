@@ -1,4 +1,4 @@
-import { TeamTable } from './tournament';
+import { TeamTable } from '../modules/tournament';
 
 export type CompeteHandler = () => void;
 export class MatchUp {
@@ -24,14 +24,14 @@ export class MatchUp {
 
   public addTeams(teamIds: number[]): this {
     this.teamIds = this.teamIds.concat(teamIds);
-    console.log('add teams', teamIds);
+    // console.log('add teams', teamIds);
     this.checkMatchReadiness();
     return this;
   }
 
   public setMatchScore(matchScore: number): this {
     this.matchScore = matchScore;
-    console.log('set match score', this);
+    // console.log('set match score', this);
     this.checkMatchReadiness();
     return this;
   }

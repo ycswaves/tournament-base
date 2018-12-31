@@ -1,5 +1,5 @@
 export interface Event<T> {
-  evetName: string;
+  eventName: string;
   payload?: T;
 }
 
@@ -13,7 +13,8 @@ export class Sandbox {
   private observerMapping: ObserverMapping = {};
 
   public notify<T>(event: Event<T>): void {
-    this.observerMapping[event.evetName].forEach(handler => {
+    // console.log(`%c=== Event: ${event.eventName} ===`, 'color: blue');
+    this.observerMapping[event.eventName].forEach(handler => {
       handler(event.payload);
     });
   }

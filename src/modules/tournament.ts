@@ -1,9 +1,8 @@
-import { MatchUp, CompeteHandler } from './matchup';
+import { MatchUp, CompeteHandler } from '../models/matchup';
 import { MathUtil } from '../utils/math';
 import { Sandbox } from 'sandbox';
-import { Team } from './team';
+import { Team } from '../models/team';
 import {
-  TournamentService,
   FirstRoundMatchUpResponse,
   FirstRoundQueryPayload,
   MatchScoreResultPayload,
@@ -21,7 +20,7 @@ import {
   GET_MATCH_SCORE,
   GET_WINNER_SCORE,
   RECEIVED_WINNER_SCORE
-} from 'events';
+} from '../events';
 
 export interface TeamTable {
   [id: number]: Team;
@@ -51,7 +50,7 @@ export class Tournament {
 
   public start(): void {
     this.sandbox.notify<FirstRoundQueryPayload>({
-      evetName: TOURNAMENT_START,
+      eventName: TOURNAMENT_START,
       payload: {
         teamsPerMatch: this.teamPerMatch,
         numOfTeams: this.teamsCount
@@ -68,7 +67,7 @@ export class Tournament {
 
   private addTeamInfo(teamId: number): void {
     this.sandbox.notify<TeamInfoQueryPayload>({
-      evetName: GET_TEAM_INFO,
+      eventName: GET_TEAM_INFO,
       payload: {
         tournamentId: this.id,
         teamId
@@ -89,7 +88,7 @@ export class Tournament {
     this.matchTable[match.hashCode()] = match;
     match.onReadyToCompete(this.teamTable, this.createCompeteHandler(match));
     this.sandbox.notify<MatchScoreQueryPayload>({
-      evetName: GET_MATCH_SCORE,
+      eventName: GET_MATCH_SCORE,
       payload: {
         match,
         tournamentId: this.id
@@ -104,7 +103,7 @@ export class Tournament {
 
   private getWinnerScore(match: MatchUp) {
     this.sandbox.notify<WinnerScoreQueryPayload>({
-      evetName: GET_WINNER_SCORE,
+      eventName: GET_WINNER_SCORE,
       payload: {
         teamTable: this.teamTable,
         tournamentId: this.id,
@@ -117,7 +116,7 @@ export class Tournament {
     const { winnerScore, match } = winnerResult;
     const winnerId = match.getWinnerId(winnerScore);
 
-    console.log(`${match.hashCode()} winner is: `, winnerId);
+    // console.log(`${match.hashCode()} winner is: `, winnerId);
     if (this.isLastMatch(match)) {
       // show winnder
       console.log(`final winner is ${winnerId}`);

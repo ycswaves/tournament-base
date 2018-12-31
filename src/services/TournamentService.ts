@@ -1,6 +1,6 @@
 import { MatchUp } from 'models/matchup';
 import { ServiceClient } from 'utils/apiClient';
-import { TeamTable } from 'models/tournament';
+import { TeamTable } from 'modules/tournament';
 import { Team, TeamFactory } from 'models/team';
 import { Sandbox } from 'sandbox';
 import {
@@ -79,7 +79,7 @@ export class TournamentService {
     const response = await ServiceClient.get(uri);
     const winnerScore = parseInt(response.score, 10);
     this.sandbox.notify<WinnerScoreResultPayload>({
-      evetName: RECEIVED_WINNER_SCORE,
+      eventName: RECEIVED_WINNER_SCORE,
       payload: {
         winnerScore,
         match
@@ -98,7 +98,7 @@ export class TournamentService {
     const response = await ServiceClient.get(uri); // TODO: need mapping
     const matchScore = parseInt(response.score, 10);
     this.sandbox.notify<MatchScoreResultPayload>({
-      evetName: RECEIVED_MATCH_SCORE,
+      eventName: RECEIVED_MATCH_SCORE,
       payload: { match, matchScore }
     });
   };
@@ -111,7 +111,7 @@ export class TournamentService {
     const { name, score } = response;
     const team = TeamFactory.createTeam(teamId, name, score);
     this.sandbox.notify<Team>({
-      evetName: RECEIVED_TEAM_INFO,
+      eventName: RECEIVED_TEAM_INFO,
       payload: team
     });
   };
@@ -134,7 +134,7 @@ export class TournamentService {
     );
 
     this.sandbox.notify<FirstRoundMatchUpResponse>({
-      evetName: FIRST_ROUND_RECEIVED,
+      eventName: FIRST_ROUND_RECEIVED,
       payload: matchUps
     });
   };

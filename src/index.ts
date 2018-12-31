@@ -1,4 +1,4 @@
-import { Tournament } from './models/tournament';
+import { Tournament } from './modules/tournament';
 import { Sandbox } from 'sandbox';
 import { TournamentService } from 'services/TournamentService';
 
