@@ -1,6 +1,5 @@
 import { MatchUp } from 'models/matchup';
 import { ServiceClient } from 'utils/apiClient';
-import { TeamTable } from 'modules/tournament';
 import { Team, TeamFactory } from 'models/team';
 import { Sandbox } from 'sandbox';
 import {
@@ -8,13 +7,24 @@ import {
   RECEIVED_TEAM_INFO,
   RECEIVED_MATCH_SCORE,
   RECEIVED_WINNER_SCORE,
-  TOURNAMENT_START,
   GET_TEAM_INFO,
   GET_MATCH_SCORE,
-  GET_WINNER_SCORE
+  GET_WINNER_SCORE,
+  GET_FIRST_ROUND
 } from 'events';
+import {
+  WinnerScoreQueryPayload,
+  WinnerScoreResultPayload,
+  MatchScoreQueryPayload,
+  MatchScoreResultPayload,
+  TeamInfoQueryPayload,
+  FirstRoundQueryPayload,
+  FirstRoundMatchUpResponse
+} from 'models/payloads';
+import { Module } from 'modules/base';
 
 interface FirstRoundDto {
+  tournamentId: number;
   matchUps: [
     {
       match: number;
@@ -23,48 +33,15 @@ interface FirstRoundDto {
   ];
 }
 
-export interface FirstRoundMatchUpResponse {
-  teamIds: number[];
-  matchUps: MatchUp[];
-}
-
-export interface FirstRoundQueryPayload {
-  numOfTeams: number;
-  teamsPerMatch: number;
-}
-
-export interface TeamInfoQueryPayload {
-  tournamentId: number;
-  teamId: number;
-}
-
-export interface MatchScoreQueryPayload {
-  tournamentId: number;
-  match: MatchUp;
-}
-
-export interface MatchScoreResultPayload {
-  matchScore: number;
-  match: MatchUp;
-}
-
-export interface WinnerScoreQueryPayload {
-  tournamentId: number;
-  match: MatchUp;
-  teamTable: TeamTable;
-}
-
-export interface WinnerScoreResultPayload {
-  winnerScore: number;
-  match: MatchUp;
-}
-
-export class TournamentService {
+export class TournamentService extends Module {
   constructor(private sandbox: Sandbox) {
-    this.sandbox.register(TOURNAMENT_START, this.getFirstRound);
-    this.sandbox.register(GET_TEAM_INFO, this.getTeamInfo);
-    this.sandbox.register(GET_MATCH_SCORE, this.getMatchScore);
-    this.sandbox.register(GET_WINNER_SCORE, this.getWinnerScore);
+    super(sandbox);
+    this.eventHandlers = {
+      [GET_FIRST_ROUND]: this.getFirstRound,
+      [GET_TEAM_INFO]: this.getTeamInfo,
+      [GET_MATCH_SCORE]: this.getMatchScore,
+      [GET_WINNER_SCORE]: this.getWinnerScore
+    };
   }
 
   private getWinnerScore = async (query: WinnerScoreQueryPayload) => {
@@ -122,7 +99,7 @@ export class TournamentService {
     const queryStr = `numberOfTeams=${numOfTeams}&teamsPerMatch=${teamsPerMatch}`;
     const response: FirstRoundDto = await ServiceClient.post(uri, queryStr);
     const matchUps = response.matchUps.reduce(
-      (matchUps: FirstRoundMatchUpResponse, next) => {
+      (matchUps: { teamIds: number[]; matchUps: MatchUp[] }, next) => {
         matchUps.teamIds.push(...next.teamIds);
         const newMatch = new MatchUp(0, next.match, teamsPerMatch).addTeams(
           next.teamIds
@@ -135,7 +112,10 @@ export class TournamentService {
 
     this.sandbox.notify<FirstRoundMatchUpResponse>({
       eventName: FIRST_ROUND_RECEIVED,
-      payload: matchUps
+      payload: {
+        ...matchUps,
+        tournamentId: response.tournamentId
+      }
     });
   };
 }

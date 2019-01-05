@@ -1,4 +1,5 @@
 export const TOURNAMENT_START = 'tournament_start';
+export const GET_FIRST_ROUND = 'get_first_round';
 export const FIRST_ROUND_RECEIVED = 'first_round_received';
 export const GET_TEAM_INFO = 'get_team_info';
 export const RECEIVED_TEAM_INFO = 'received_team_info';

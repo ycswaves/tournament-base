@@ -1,8 +1,13 @@
 import { Tournament } from './modules/tournament';
 import { Sandbox } from 'sandbox';
 import { TournamentService } from 'services/TournamentService';
+import { Ui } from 'modules/ui';
 
 const sandbox = new Sandbox();
-const t = new Tournament(0, 2, 64, sandbox);
-const s = new TournamentService(sandbox);
-t.start();
+const u = new Ui(sandbox);
+new Tournament(sandbox).init();
+new TournamentService(sandbox).init();
+
+document.addEventListener('DOMContentLoaded', () => {
+  u.init();
+});

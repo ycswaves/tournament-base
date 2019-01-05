@@ -4,21 +4,29 @@ import {
   TOURNAMENT_START,
   FIRST_ROUND_RECEIVED,
   GET_TEAM_INFO,
-  GET_MATCH_SCORE
+  GET_MATCH_SCORE,
+  GET_FIRST_ROUND
 } from '../events';
+import { MatchUp } from 'models/matchup';
 import {
   FirstRoundQueryPayload,
-  FirstRoundMatchUpResponse
-} from 'services/TournamentService';
-import { MatchUp } from 'models/matchup';
+  FirstRoundMatchUpResponse,
+  TournameSpecPayload
+} from 'models/payloads';
 
 describe('Tournament', () => {
   describe('#start', () => {
     const sb = new Sandbox();
-    const t = new Tournament(0, 2, 4, sb);
+    new Tournament(sb).init();
     const stub = jest.fn();
-    sb.register(TOURNAMENT_START, stub);
-    t.start();
+    sb.register(GET_FIRST_ROUND, stub);
+    sb.notify<TournameSpecPayload>({
+      eventName: TOURNAMENT_START,
+      payload: {
+        numOfTeams: 4,
+        teamsPerMatch: 2
+      }
+    });
 
     it('should notify subscribers about the start', () => {
       const expected: FirstRoundQueryPayload = {
@@ -31,13 +39,14 @@ describe('Tournament', () => {
 
   describe('upon received first round matchups', () => {
     const sb = new Sandbox();
-    const t = new Tournament(0, 2, 4, sb);
+    new Tournament(sb).init();
     const fakeMatchups: FirstRoundMatchUpResponse = {
       teamIds: [2, 3, 4, 5],
       matchUps: [
         new MatchUp(0, 1, 2).addTeams([2, 5]),
         new MatchUp(0, 1, 2).addTeams([3, 4])
-      ]
+      ],
+      tournamentId: 0
     };
 
     const getTeamHandler = jest.fn();

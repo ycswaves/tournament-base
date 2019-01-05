@@ -27,6 +27,10 @@ export class Sandbox {
   }
 
   public unregister(eventName: string, handler: EventHandler) {
+    if (!(this.observerMapping[eventName] instanceof Map)) {
+      return;
+    }
+
     this.observerMapping[eventName].delete(handler);
   }
 }

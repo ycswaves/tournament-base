@@ -3,24 +3,27 @@ import { MathUtil } from '../utils/math';
 import { Sandbox } from 'sandbox';
 import { Team } from '../models/team';
 import {
-  FirstRoundMatchUpResponse,
-  FirstRoundQueryPayload,
-  MatchScoreResultPayload,
-  MatchScoreQueryPayload,
-  TeamInfoQueryPayload,
-  WinnerScoreQueryPayload,
-  WinnerScoreResultPayload
-} from '../services/TournamentService';
-import {
-  TOURNAMENT_START,
+  GET_FIRST_ROUND,
   FIRST_ROUND_RECEIVED,
   GET_TEAM_INFO,
   RECEIVED_TEAM_INFO,
   RECEIVED_MATCH_SCORE,
   GET_MATCH_SCORE,
   GET_WINNER_SCORE,
-  RECEIVED_WINNER_SCORE
+  RECEIVED_WINNER_SCORE,
+  TOURNAMENT_START
 } from '../events';
+import {
+  FirstRoundQueryPayload,
+  FirstRoundMatchUpResponse,
+  TeamInfoQueryPayload,
+  MatchScoreQueryPayload,
+  MatchScoreResultPayload,
+  WinnerScoreQueryPayload,
+  WinnerScoreResultPayload,
+  TournameSpecPayload
+} from 'models/payloads';
+import { Module } from './base';
 
 export interface TeamTable {
   [id: number]: Team;
@@ -30,39 +33,58 @@ export interface MatchTable {
   [hashCode: string]: MatchUp;
 }
 
-export class Tournament {
-  private numOfRounds: number = -1;
+enum State {
+  STOPPED,
+  STARTED,
+  PAUSED
+}
+
+export class Tournament extends Module {
+  private id!: number;
   private teamTable: TeamTable = {};
   private matchTable: MatchTable = {};
+  private teamPerMatch!: number;
+  private teamsCount!: number;
+  private numOfRounds!: number;
+  private state: State = State.STOPPED;
 
-  constructor(
-    private id: number,
-    private teamPerMatch: number,
-    private teamsCount: number,
-    private sandbox: Sandbox
-  ) {
-    this.numOfRounds = MathUtil.getBaseLog(teamPerMatch, teamsCount);
-    sandbox.register(FIRST_ROUND_RECEIVED, this.onFirstRoundReceived);
-    sandbox.register(RECEIVED_TEAM_INFO, this.onTeamInfoReceived);
-    sandbox.register(RECEIVED_MATCH_SCORE, this.onMatchScoreReceived);
-    sandbox.register(RECEIVED_WINNER_SCORE, this.onWinnerScoreReceived);
+  constructor(private sandbox: Sandbox) {
+    super(sandbox);
+    this.eventHandlers = {
+      [TOURNAMENT_START]: this.start,
+      [FIRST_ROUND_RECEIVED]: this.onFirstRoundReceived,
+      [RECEIVED_TEAM_INFO]: this.onTeamInfoReceived,
+      [RECEIVED_MATCH_SCORE]: this.onMatchScoreReceived,
+      [RECEIVED_WINNER_SCORE]: this.onWinnerScoreReceived
+    };
   }
 
-  public start(): void {
+  private start = (tournamentSpec: TournameSpecPayload): void => {
+    if (this.state === State.STARTED) {
+      console.log('already started');
+      return;
+    }
+
+    this.state = State.STARTED;
+
+    this.teamPerMatch = tournamentSpec.teamsPerMatch;
+    this.teamsCount = tournamentSpec.numOfTeams;
+    this.numOfRounds = MathUtil.getBaseLog(this.teamPerMatch, this.teamsCount);
+
     this.sandbox.notify<FirstRoundQueryPayload>({
-      eventName: TOURNAMENT_START,
+      eventName: GET_FIRST_ROUND,
       payload: {
         teamsPerMatch: this.teamPerMatch,
         numOfTeams: this.teamsCount
       }
     });
-  }
+  };
 
   private onFirstRoundReceived = (firstRound: FirstRoundMatchUpResponse) => {
-    const { teamIds, matchUps } = firstRound;
+    const { teamIds, matchUps, tournamentId } = firstRound;
+    this.id = tournamentId;
     teamIds.forEach(id => this.addTeamInfo(id));
     matchUps.forEach(match => this.addMatch(match));
-    this.sandbox.unregister(FIRST_ROUND_RECEIVED, this.onFirstRoundReceived);
   };
 
   private addTeamInfo(teamId: number): void {
@@ -116,10 +138,9 @@ export class Tournament {
     const { winnerScore, match } = winnerResult;
     const winnerId = match.getWinnerId(winnerScore);
 
-    // console.log(`${match.hashCode()} winner is: `, winnerId);
     if (this.isLastMatch(match)) {
       // show winnder
-      console.log(`final winner is ${winnerId}`);
+      this.onFinalWinner(winnerId);
       return;
     }
 
@@ -145,5 +166,16 @@ export class Tournament {
 
   private isLastMatch(match: MatchUp): boolean {
     return match.roundId === this.numOfRounds - 1;
+  }
+
+  private onFinalWinner(winnerId: number) {
+    console.log(`final winner is ${winnerId}`);
+    this.reset();
+  }
+
+  private reset() {
+    this.teamTable = {};
+    this.matchTable = {};
+    this.state = State.STOPPED;
   }
 }
