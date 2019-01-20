@@ -30,10 +30,10 @@ describe('Match', () => {
 
       it('should return correct winner', () => {
         // if winner score is 2
-        expect(match.getWinnerId(team1.score)).toEqual(team1.id);
+        expect(match.setWinnerId(team1.score)).toEqual(team1.id);
 
         // if winner score is 3
-        expect(match.getWinnerId(team2.score)).toEqual(team2.id);
+        expect(match.setWinnerId(team2.score)).toEqual(team2.id);
       });
     });
 
@@ -47,7 +47,7 @@ describe('Match', () => {
       match.addTeams([team2.id, team1.id]).setMatchScore(12313);
 
       it('should return the team with lower id as winner', () => {
-        expect(match.getWinnerId(SAME_SCORE)).toEqual(team1.id);
+        expect(match.setWinnerId(SAME_SCORE)).toEqual(team1.id);
       });
     });
   });

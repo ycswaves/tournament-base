@@ -1,4 +1,5 @@
 import typescript from "rollup-plugin-typescript2";
+import resolve from "rollup-plugin-node-resolve";
 
 export default {
   input: "src/index.ts",
@@ -9,6 +10,7 @@ export default {
     file: "index.js"
   },
   plugins: [
+    resolve(),
     typescript({
       // Make sure we are using our version of TypeScript.
       typescript: require("typescript"),

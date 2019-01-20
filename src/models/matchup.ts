@@ -1,11 +1,10 @@
-import { TeamTable } from '../modules/tournament';
+import { TeamTable } from './tournament';
 
 export type CompeteHandler = () => void;
 export class MatchUp {
+  public winnerId!: number;
   private teamIds: number[] = [];
   private matchScore!: number;
-  private notifyTournament!: CompeteHandler;
-  private teamLookupTable!: TeamTable;
 
   constructor(
     readonly roundId: number,
@@ -13,26 +12,17 @@ export class MatchUp {
     private teamsPerMatch: number
   ) {}
 
-  public onReadyToCompete(teamTable: TeamTable, handler: CompeteHandler) {
-    this.notifyTournament = handler;
-    this.teamLookupTable = teamTable;
-  }
-
   public addTeam(teamId: number): this {
     return this.addTeams([teamId]);
   }
 
   public addTeams(teamIds: number[]): this {
     this.teamIds = this.teamIds.concat(teamIds);
-    // console.log('add teams', teamIds);
-    this.checkMatchReadiness();
     return this;
   }
 
   public setMatchScore(matchScore: number): this {
     this.matchScore = matchScore;
-    // console.log('set match score', this);
-    this.checkMatchReadiness();
     return this;
   }
 
@@ -44,33 +34,33 @@ export class MatchUp {
     return this.matchScore;
   }
 
-  public checkMatchReadiness(): void {
+  public checkMatchReadiness(teamLookupTable: TeamTable): boolean {
     if (this.matchScore === undefined) {
-      return;
+      return false;
     }
 
     if (this.teamIds.length < this.teamsPerMatch) {
-      return;
+      return false;
     } else {
       const allTeamInfoAvailable: boolean = this.teamIds.reduce(
         (teamsReady: boolean, teamId: number) =>
-          !!this.teamLookupTable[teamId] && teamsReady,
+          !!teamLookupTable[teamId] && teamsReady,
         true
       );
 
       if (!allTeamInfoAvailable) {
-        return;
+        return false;
       }
     }
 
-    this.notifyTournament();
+    return true;
   }
 
-  public getWinnerId(winnerScore: number): number {
+  public setWinnerId(winnerScore: number, teamLookupTable: TeamTable): this {
     const winnerId = this.teamIds
       .sort((teamId1, teamId2) => teamId1 - teamId2)
       .find((teamId: number) => {
-        const team = this.teamLookupTable[teamId];
+        const team = teamLookupTable[teamId];
         return team.score === winnerScore;
       });
 
@@ -78,7 +68,8 @@ export class MatchUp {
       throw new Error('no matching winner score');
     }
 
-    return winnerId;
+    this.winnerId = winnerId;
+    return this;
   }
 
   public hashCode() {
